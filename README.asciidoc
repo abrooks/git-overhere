@@ -1,0 +1,92 @@
+= git-overhere
+
+Add individual files or sub-trees from other repos into your git tree.
+
+== Motivation
+
+It is often the case that you wish to break up a repo into multiple repos while
+preserving a similar working copy environment. Common reasons include:
+
+* you wish to have some sub-tree shared across multiple repos
+* you wish to make some sub-tree a public repo while the main repo remains private
+* you wish to have different update flows for some sub-tree and the main repo
+
+== Existing tools
+
+git core packaging provides `git-submodule`, a command that allows you to, at
+various points in your working copy, provide checkouts to other working copies.
+The user experience for `git-submodule` is generally awful. Users of the repo
+must be aware of the presence of submodules and actively use the `init` and
+`update` sub-commands of `git-submodule`. Furthermore, a user checking out a
+repo that leverages `git-submodules` must have access permissions to all
+referenced repos at time of checkout and future updates, often creating a case
+where a user can check out a repo but not usefully use it since there are
+unresolvable gaps in the tree.
+
+There are some better tools such as `git-subtree` and `git-subrepo` which allow
+you to take the root from another repo and graft it in at some point into your
+git tree. `git-subtree` does this preserving the history of the grafted-in
+tree, `git-subrepo` does this as a point-in-time snapshot. Both of these tools
+(as with `git-submodule`) are only able to graft in another repo at its root,
+not a sub-tree or file.
+
+`git-subtree` gives no idication in the repo that a
+graft has happened in the working copy, only some annotations in the commit
+message when a graft is done. Repos using `git-subtree` just work for users
+cloning the main repo as they will automatically get the content of the grafted
+repo but it doesn't make it clear to those who might make changes and need to
+be aware of the difference between the main repo content and the `git-subtree`
+managed content.
+
+`git-subrepo` adds a metadata file `.gitrepo` in
+the directory containing the root of the graft. This alteration of the grafted
+content, coupled with the `.gitrepo` metadata file containing the parent commit
+SHA that the most recent graft was done on to, means that certain git
+activities, particularly commit rewriting activities like rebase, are very
+complex or prone to fail.
+
+== Goal
+
+`git-overhere` is a tool that aims to avoid the above limitations. It is not
+interested in preserving the full history of grafts (as with `git-submodule` or
+`git-subtree). Rather, `git-overhere` aims to provide clear, easy to maintain
+grafts of any file (blob) or tree from another repo.
+
+== Historical Note
+
+I had wanted to name this project `git-graft` which felt most descriptive but,
+deep in git's long, twisty history, there was a git subcommand called
+`git-graft` so I decided to avoid it entirely.
+
+== Usage
+
+----
+$ cd my-main-git-repo
+$ git overhere add git@github.com/abrooks/subrepo.git master path/in/subrepo:path/in/our-repo
+$ ls path/in/
+.GIT-OVERHERE_our-repo
+our-repo
+$ cat .GIT-OVERHERE_our-repo
+version: 1
+repo: git@github.com/abrooks/subrepo.git
+ref: master
+path: path/in/subrepo
+commit: abcdef1234567890
+----
+
+== Notes
+
+=== Use cases
+
+* add
+* show
+* rm
+* fetch
+* status
+* unmodified/modified update local
+* modified/modified clobber local
+* modified/unmodified clobber local (reset)
+* modified/modified merge local
+* modified/unmodified push upstream
+* modified/modified rebase local
+* move local
