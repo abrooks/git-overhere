@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+
+set -e
+
+ME="git-overhere"
+
+PROG=$0
+
+METAPREFIX="."
+METASUFFIX="_OVERHERE"
+
+usage() {
+  echo "Usage: ${PROG} clone <URI> [[ref] commit-ish] <src-path> <target>"
+  echo "       ${PROG} fetch <URI> [commit-ish] <src-path> <target>"
+  echo "       ${PROG} rm <URI> <target>"
+  echo "       ${PROG} mv <URI> <target> <dst>"
+}
+
+
+format_metafile() {
+  echo "# git-overhere generated metadata file, do not edit."
+  echo "version $VER"
+  echo "src_uri $SRC"
+  echo "path $REPOPATH"
+  echo "sha $SHA"
+  [-n "$REF" ] && echo "ref=$REF"
+}
+
+parse_metafile() {
+  echo
+}
+
+reset_repo() {
+  echo
+}
+
+clone() {
+  # Argument processing
+  if [ -z "$COMMITTISH" ]; then
+    echo # lookup HEAD; set COMMITTISH
+  fi
+  METANAME=$(metafile_name "$TARGET")
+
+  # Assure new (no file, no metafile)
+  if ! [ -n "$FORCE" ]; then
+    if [ -e "$METANAME" ]; then
+      die "File '$TARGET' already managed by $0. See usage for updating." 
+    fi
+    if [ -e "$TARGET" ]; then
+      die "File $TARGET already exists and is not managed by $ME."
+    fi
+  fi
+ 
+  if git diff --quiet; then
+      die "Repo is dirty. (See output of git-diff.)"
+  fi
+  # Check clean repo
+  # add remote ... remove
+  # fetch
+  # find commit
+  # Find tree/blob sha of target
+  # create metafile ... git reset; git checkout
+  # add metafile to index ... git reset; git checkout
+  # fetch index
+  # write updex with updated entry ... git reset; git checkout
+  # commit
+
+}
+
+
+# Main command handling
+# TODO: ...
+#shift
+#clone "$@"
+
+# Index interacting commands:
+# ---
+# git-checkout-index - Copy files from the index to the working tree.
+# git-update-index - Register file contents in the working tree to the index.
+# git-merge-index - Run a merge for files needing merging.
+# git-diff-index - Compare a tree to the working tree or index.
+# git-show-index - Show packed archive index.
+# git-merge-tree - Show three-way merge without touching index.
+# git-read-tree - Reads tree information into the index.
+# git-ls-files - Show information about files in the index and the working tree.
+# git-apply - Apply a patch to files and/or to the index.
+# git-add - Add file contents to the index.
+# git-rm - Remove files from the working tree and from the index.
+
